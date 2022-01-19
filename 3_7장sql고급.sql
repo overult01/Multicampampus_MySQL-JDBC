@@ -250,3 +250,367 @@ from employees
 where hire_date like '_____06%';
 
 select found_rows();
+
+# insert: 지정된 위치에 지정한 개수만큼 문자열 삭제 후 채워넣기 
+select insert('abcde', 2, 3, 'xxxxxxx');   # 'axxxxxxxe'
+select insert('abcde', 2, 5, '****');
+# repeat: 문자열을 지정한 개수만큼 반복하기 
+select repeat("a", 5);  # 'aaaaa'
+select repeat("a", char_length('agdgeg'));  # 'aaaaaa'
+
+# pw 변수의 모든 값을 '*' 암호화하여 출력할 것
+set @pw = 11551;
+
+select insert(@pw, 2, char_length(@pw)-1, repeat("*", char_length(@pw)-1));
+
+# 1**** 로 출력하기 
+select insert(@pw, 2, char_length(@pw)-1, repeat("*", char_length(@pw)-1));
+
+# 모두 ***** 로 출력하기 
+select insert(@pw, 1, char_length(@pw), repeat("*", char_length(@pw)));
+
+# left right: 일부 개수만 가져오기
+select left('가나다라', 3), right('가나다라',1);
+
+# upper, lower: 대, 소문자 변경
+select upper('abcDE'), lower('abcDE');  # 'ABCDE', 'abcde'
+
+# lpad, rpad: 문자열 왼, 오른쪽에 지정한 개수만큼 지정 문자 붙이기(insert와는 달리 원래 있던 문자열이 없어지지 않음)
+select lpad('abc', 10, '#'), rpad('abc', 10, '#'), insert('abc', 1, 2, '#');
+
+use employees;
+select salary, lpad(salary, 5, " ") from employees;
+
+# ltrim, rtrim : 왼, 오른쪽의 공백을 제거하라
+set @pw = "  이것이 mysql이다     ";
+select char_length(@pw), char_length(ltrim(@pw)), char_length(rtrim(@pw));  # '18', '16', '13'
+
+# trim : 왼쪽, 오른쪽, 양쪽 공백 제거
+set @pw = "ㅋㅋㅋㅋ웃겨요ㅋㅋㅋㅋ";
+# 앞쪽에 있는 문자 없애기: trim(leading 문자열)
+select trim(leading 'ㅋ' from @pw); # 웃겨요ㅋㅋㅋㅋ
+
+# 뒤에 있는 문자 없애기: trim(trailing 문자열)
+select trim(trailing 'ㅋ' from @pw); # ㅋㅋㅋㅋ웃겨요
+
+# 양쪽에 있는 문자 없애기: trim(both 문자열)
+select trim(both 'ㅋ' from @pw); # 웃겨요
+
+
+# 숫자함수
+# abs: 절대값
+
+# mod(수, 나눌 값) 해서 나머지 값 구하기 
+# 사번이 3의 배수인 사번 이름 조회 
+select employee_id, first_name
+from employees
+where mod(emloyee_id, 3) = 0;
+
+# round: 반올림, truncate: 버림
+select avg(salary) from employees;
+select avg(salary),
+cast(avg(salary) as signed integer),  # cast는 무조건 정수로만 표현가능하다. # 6461
+convert(avg(salary), signed integer),  # 정수 
+format(avg(salary), 0),   # 정수 
+round(avg(salary), -2),  # 반올림  # 6500
+truncate(avg(salary), -2)  # 내림  # 6400
+from employees;
+
+
+# 시스템정보 
+select current_user(), database(), version();
+
+# 날짜와 시간
+select current_date(), current_time(), curdate(), curtime(), current_timestamp(), now(), sysdate();
+
+# yyyy-mm-dd hh:mm:ss
+select cast('2022-01-18' as date);
+select cast('2022-01-18' as datetime);
+select cast('2022-01-18' as time);  # 시간형식(hh:mm:ss)과 달라서 잘못된 값이 나옴
+select cast('2022-01-18 12:34:56' as time);  # 시간형식(hh:mm:ss)
+select cast('12:34:56' as time);  # 시간형식(hh:mm:ss)
+select cast('20220118123456' as datetime); # 자릿수가 맞으면 구분자가 없어도 연도월일 시분초를 딱 맞춰서 자른다.
+select cast('2022/01%18' as datetime); # 자릿수가 맞으면 구분자가 없어도 연도월일 시분초를 딱 맞춰서 자른다.
+select cast('2022a01b18' as datetime); # 일반데이터를 구분자 대신 넣으면 null이 나온다. 데이터 형식은 yyyy-mm-dd 8자리데이터. 일반문자는 구분자로 여기지 않는다. (반면, 특수문자는 구분자로 여긴다.)
+
+
+insert into emp_copy value(500, '이름', 45000, cast('20220118' as date));
+
+# adddate(날짜, 차이값): 미래날짜 계산, subdate(날짜, 차이값): 이전 날짜 계산 
+select current_date as 오늘, 
+adddate(current_date, interval 1 day) as 내일,
+subdate(current_date, interval 1 day) as 어제;
+
+select current_date as 오늘, 
+adddate(current_date, interval 1 month) as 다음달,
+subdate(current_date, interval 1 month) as 이전달;
+
+select current_date as 오늘, 
+adddate(current_date, interval 1 year) as 내년,
+subdate(current_date, interval 1 year) as 작년;
+
+# addtime, subtime
+select addtime(now(), '2:10:10');
+
+# 날짜 시간에서 원하는 부분만 추출하는 것.
+select year(now()), month(now()), day(now());
+select date(now()), time(now());
+
+# datediff: 오늘부터 며칠이 경과되었는지
+# 참고) xxxdiff: 차이 구하는 함수 
+select datediff(current_date, '2002-01-25 00:11:23');  # 7298  # 숫자 형태 리턴
+select datediff(current_date, '2002-01-25');  # 7298
+select subdate(current_date, interval 30 day);  # '2021-12-19'  # 날짜 형태 리턴 
+
+# 입사한지 며칠되었는지 경과일수 조회
+select current_date, hire_date, datediff(current_date, hire_date) as 경과일수
+from employees;
+
+# 입사한지 며칠되었는지 경과주수, 경과년수 조회(정수로만 조회. 소수점 이하는 버림)
+select current_date, hire_date, 
+truncate(datediff(current_date, hire_date)/7, 0) as 경과주수, 
+truncate(datediff(current_date, hire_date)/365, 0) as 경과년수
+from employees;
+
+
+# format
+# date_format
+select date_format(current_date, '%y-%m');  # 소문자 y는 2자리 연도.   # yy-mm
+select date_format(current_date, '%Y-%m');  # 대문자 Y는 4자리 연도.   # yyyy-mm
+# 연)   %Y : 2022,  %y : 22
+# 월)   %m : 01,  %M: JANUARY ,   %c : 1
+# 일)   %d : 08,  %D: 08TH    ,   %e : 8
+# 시간)  시간: %H , %l(소문자L)
+# 분) %i
+# 초) %s
+
+
+# period_diff(년월1, 년월2): 개월수 차이만 구한다. 단 년월이 '202201'형식으로 들어가야 한다.
+select period_diff('202201', '202101');  # 12  (개월) 
+
+# 입사한지 며칠되었는지 경과개월수 조회
+select truncate(datediff(current_date, hire_date)/365, 0) as 경과년수,
+period_diff(date_format(current_date,'%Y%m'), date_format(hire_date, '%Y%m'))
+from employees;
+
+
+--
+# 조인: 두 개 이상의join 테이블 합쳐서 조회하기 (열을 합침)
+
+# 양쪽 테이블에 있는 동일한 테이블은 반드시 명시해야 한다. 
+select first_name, emp.department_id, dep.department_name
+from employees emp inner join departments dep 
+on emp.department_id=dep.department_id;
+
+/*
+as로 테이블별 별칭도 달 수 있다.
+
+select 컬럼들
+from 테이블1 inner join 테이블2 on 조인 조건식
+[where 일반 조회조건식]
+;
+*/
+
+
+# 부서코드가 50, 80, 100 부서원들에 대해서 이름, 사원의 부서코드, 부서이름 조회
+select first_name, emp.department_id, dep.department_name
+from employees emp inner join departments dep 
+on emp.department_id=dep.department_id  # on뒤에는 조인과 관련된 조건 
+where emp.department_id in (50, 80, 100);  # where문에는 조인과 관련 없는 조건 
+
+# 모든 사원의 이름, 부서코드, 부서이름, 근무도시이름 조회
+# employees: 사원정보
+
+# 한 번에 여러 테이블 조인 
+# 어떤 사원이, 어떤 부서에, 어떤 도시에 있는지 알아보기 
+select first_name, e.department_id, department_name, d.location_id, l.city
+from employees e 
+inner join departments d on e.department_id = d.department_id
+inner join locations l on d.location_id = l.location_id
+order by first_name;
+
+
+select first_name, department_id
+from employees
+where department_id is null;
+
+
+# inner join : join에 참여한 모든 테이블에 존재하는 레코드만 조인. (교집합). join이라고만 써도 inner join이라고 합니다.
+
+# outer join : 합침합. 조인의 조건에 만족되지 않는 행까지도 포함시킨다. 
+
+# left outer join: 왼쪽 테이블의 데이터는 모두 조회되어야 한다. 왼쪽 전체 + 교집합 
+# 사원 이름, 부서코드, 부서이름 조회하되 부서코드없는 직원도 포함해서 조회
+select  first_name, e.department_id, department_name
+from employees e left outer join departments d on e.department_id = d.department_id
+order by 1;   # 부서가 없는 Kimberely 포함
+
+# 부서코드가 없는 사원은 부서id를 -, 부서명을 '미정'으로 표시.
+select first_name, ifnull(e.department_id, '-'), ifnull(department_name, '미정')
+from employees e left outer join departments d on e.department_id = d.department_id;
+
+
+# right outer join: 오른쪽 테이블의 데이터는 모두 조회되어야 한다. 오른쪽 전체 + 교집합 
+# 사원 이름, 부서코드, 부서이름 조회하되 부서원 없는 부서도 포함해서 조회
+select ifnull(first_name, '부서원 없음'), e.department_id, department_name
+from employees e right outer join departments d on e.department_id = d.department_id;  # 부서원이 없는 부서도 출력되었다. 
+
+select found_rows();  # 122개
+
+
+# full outer join: mysql에서는 미지원. 전체 합집합.
+
+
+# cross join: 되도록 하지말자. 지양. 의도적으로 대량 데이터들이 필요한 경우에만 사용한다. (예외적 사용)
+# 곱집합. 한 쪽 테이블의 모든 행들과 다른 쪽 테이블의 모든 행을 조인시킨다. 기존 조인에서 on 생략하면 된다.
+# 만약 테이블a에 n개 행, 테이블b에 m개 행이 있다면 결과는 n * m개
+select first_name, emp.department_id, dep.department_name
+from employees emp inner join departments dep;  # 부서 id마다 부서명을 알 수 없어 사실상 의미 없는 조인이다. 
+# on emp.department_id=dep.department_id;
+
+
+# self join : 자기 자신의 테이블을 조인한다. 컬럼명 앞에 별칭을 반드시 사용. 필수.
+# inner join 
+select me.first_name, me.manager_id, man.employee_id, man.first_name
+from employees me inner join employees man on me.manager_id = man.employee_id;
+select found_rows();  # 106
+
+# self join : 자기 자신의 테이블을 조인한다. 컬럼명 앞에 별칭을 반드시 사용. 필수.
+# outer 조인(보통 ifnull함수와 자주 사용)
+select me.first_name, me.manager_id, man.employee_id, man.first_name, ifnull(man.first_name, "사장님")
+from employees me left outer join employees man on me.manager_id = man.employee_id;
+select found_rows();  # 107
+
+# 자신의 직속 상사보다 많은 급여를 받는 사원의 이름, 사원의 급여, 직속상사의 급여 조회
+# 셀프조인 실습
+select emp.first_name, emp.salary, manager.salary
+from employees emp inner join employees manager on emp.manager_id = manager.employee_id
+where emp.salary > manager.salary;  # 2건이 출력된다. Lisa, Elien 
+
+--
+# UNION : 레코드, 행, row 합침 (컬럼을 합치는 건 조인)
+# UNION : 두 개의 테이블에서 중복값이 있으면 1개만 가져온다.
+# UNION ALL : 중복허용
+
+# 사전준비 
+# 50번 부서원의 모든 컬럼을 복사하여 emp_dept_50 테이블 생성
+create table emp_dept_50 (select * from employees where department_id = 50);
+
+# manager 직종 사원의 모든 컬럼 복사하여 emp_job_man 테이블 생성
+create table emp_job_man (select * from employees where job_id like '%MAN%');
+
+# a, b회사가 병합해서 테이블이 각각 있었는데 통합할 것. (행을 합치는 것이다. 예를 들어 사원 30명 + 사원 50명)
+# union : 두 개의 테이블에서 중복값이 있으면 1개만 가져온다.
+select employee_id, first_name, department_id, job_id from emp_dept_50
+union
+select employee_id, first_name, department_id, job_id from emp_job_man;
+
+# union이라서 중복값은 1개만 가져온 것이다. 
+select found_rows();  # 52
+
+
+select count(*) from emp_dept_50; # 45
+select count(*) from emp_job_man; # 12
+
+# union : 중복은 1개만 가져온다. (중복불가)
+select employee_id, first_name, department_id, job_id from emp_dept_50
+union
+select employee_id, first_name, department_id, job_id from emp_job_man;
+
+# 교집합은 5개이다.
+select dept.employee_id, dept.first_name, dept.department_id, dept.job_id 
+from emp_dept_50 dept inner join emp_job_man man on dept.employee_id = man.employee_id;
+
+# union all : 중복도 개별로 가져온다. (중복허용)
+select employee_id, first_name, department_id, job_id from emp_dept_50
+union all
+select employee_id, first_name, department_id, job_id from emp_job_man;
+
+select found_rows();  # 57 (= 52 + 5)
+
+--
+# subquery(서브쿼리) : 다른 쿼리(= 메인쿼리) 안에 있는 쿼리. select안에 select.
+/*
+단일 행 서브쿼리: 서브쿼리 결과로 1개행만 리턴되는 경우. 이럴 땐 동등비교(=).  대소비교할 때는 > <
+다중 행 서브쿼리: 서브쿼리 결과로 2개이상 행 리턴되는 경우.  이럴 땐 in연산자 사용.  대소비교할 때는 >all(모든 결과값에 대해서), >any(단 1개 이상에 대해서)
+-> 그냥 = 대신 in을 쓰면 해결된다.
+*/
+
+# employees 테이블에서 이름이 kelly인 사원과 같은 부서에 근무하는 사원의 이름, 부서 이름 조회
+select department_id
+from employees
+where first_name = 'kelly';
+
+# 서브쿼리 적용
+select first_name, department_id
+from employees
+where department_id = (select department_id from employees where first_name = 'kelly');
+
+
+# employees 테이블에서 이름이 kelly인 사원과 같은 직종에 근무하는 사원의 이름, 부서 이름 조회
+select first_name, job_id
+from employees
+where job_id = (select job_id from employees where first_name = 'kelly');
+
+
+# employees 테이블에서 이름이 kelly인 사원보다 높은 연봉을 받는 사원의 이름, 부서 이름 조회
+
+select salary
+from employees
+where first_name = 'kelly';
+
+select first_name, salary
+from employees
+where salary > (select salary from employees where first_name = 'kelly');
+
+
+# employees 테이블에서 이름이 peter인 사원과 같은 부서에 근무하는 사원의 이름, 부서 코드 조회 (오류: peter가 3명이라 department id도 여러개 -> 해결: in)
+select first_name, department_id
+from employees
+where department_id in (select department_id from employees where first_name = "peter");
+
+
+select salary from employees where first_name = "william";  # '7400.00', '8300.00'
+
+
+# 다중행 서브쿼리에서 all(결과가 여러개 일때)
+# employees 테이블에서 이름이 william인 모든 사원보다 많은 급여를 받는 사원의 이름, 부서 코드 조회
+select first_name, salary
+from employees
+where salary > all (select salary from employees where first_name = "william");
+
+# 다중행 서브쿼리에서 any(결과가 여러개 일때)
+# employees 테이블에서 단 1명의 william보다 많은 급여를 받는 사원의 이름, 부서 코드 조회
+select first_name, salary
+from employees
+where salary > any (select salary from employees where first_name = "william");
+
+
+
+
+# not in / in : 서브쿼리 형태에서 사용한다. 
+# not in
+# 대상은 50번 부서원이면서 manager직종으로 한정하여 대상자 사번, 이름, 부서, 직종을 조회한다.
+
+# in: 양쪽을 모두 만족하는 결과만 가져온다. (교잡합)
+select employee_id, first_name, department_id, job_id
+from emp_dept_50
+where employee_id in (select employee_id from emp_job_man);
+
+# not in: 한쪽의 조건만 만족하고, 다른쪽은 조건은 포함하지 않는 형태이다.
+# 재난지원금을 지원하고자 한다.
+# 대상은 50번 부서원 가운데 MANAGER 직종은 제외하고
+# 대상자 사번과 이름, 부서, 직종을 조회한다.
+select employee_id, first_name, department_id, job_id
+from emp_dept_50
+where employee_id not in (select employee_id from emp_job_man);
+
+
+# 비교) Union: 두가지 조건 중 하나만 만족해도 가져온다.
+select employee_id, first_name, department_id, job_id
+from emp_dept_50
+union
+select employee_id, first_name, department_id, job_id
+from emp_job_man;
+
+# in
