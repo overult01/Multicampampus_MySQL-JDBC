@@ -2,6 +2,8 @@
 
 MySQL의 기본 SQL 쿼리문 실습 내용입니다.
 
+* MySQL
+
 * JDBC
   + [JDBC - JDBC개념, 구현(자바, MySQL연동)](https://structuring.tistory.com/158?category=987699)
   + [JDBC - DAO, DTO 구현](https://structuring.tistory.com/159?category=987699)
