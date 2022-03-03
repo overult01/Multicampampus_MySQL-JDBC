@@ -1,1 +1,11 @@
 /bin/
+
+# custom
+*.classpath
+*.project
+.settings/
+jdbc/bin
+teacher/bin
+teacher/.classpath
+teacher/.project
+teacher/.settings/
